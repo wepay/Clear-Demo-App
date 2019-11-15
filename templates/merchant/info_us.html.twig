@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="form-login">
+        <h1>Merchant Info</h1>
+        <div class="row">
+            <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                <form onsubmit="return createLegalEntity()" method="POST">
+                    <div class="form-group">
+                        <label for="firstName">First name *</label>
+                        <input type="text" class="form-control" id="firstName" placeholder="First name" value="{{ merchantInfo.firstName }}">
+                        <span class="error" id="firstNameError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last name *</label>
+                        <input type="text" class="form-control" id="lastName" placeholder="Last name" value="{{ merchantInfo.lastName }}">
+                        <span class="error" id="lastNameError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="text" class="form-control" id="email" placeholder="Email" value="{{ merchantInfo.email }}">
+                        <span class="error" id="emailError"></span>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="isBeneficialOwner" {% if merchantInfo.isBeneficialOwner %}checked{% endif %}>
+                        <label class="form-check-label" for="isBeneficialOwner">Is Beneficial owners</label>
+                        <span class="error" id="isBeneficialOwnerError"></span>
+                    </div>
+                    {% if merchantInfo.socialSecurityNumberIsPresent != true %}
+                        <div class="form-group">
+                            <label for="socialSecurityNumber">Social security number</label>
+                            <input type="text" class="form-control" id="socialSecurityNumber" placeholder="Social security number">
+                            <span class="error" id="socialSecurityNumberError"></span>
+                        </div>
+                    {% else %}
+                        <div class="form-group">
+                            <span class="text-success">Social security number is present</span>
+                        </div>
+                    {% endif %}
+                    {% if merchantInfo.dateOfBirthIsPresent != true %}
+                        <div class="form-group">
+                            <label for="birthDayYear">Birth Day</label>
+                            <select class="form-control" id="birthDayYear">
+                                <option value="0">Select Year</option>
+                                {% for year in "now"|date("Y")..1900 %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="error" id="birthDayError"></span>
+                            <span class="error" id="birthDayYearError"></span>
+                        </div>
+                        <div class="form-group">
+                            <select class="form-control" id="birthDayMonth">
+                                <option value="0">Select Month</option>
+                                <option value="1">Jan</option>
+                                <option value="2">Feb</option>
+                                <option value="3">Mar</option>
+                                <option value="4">Apr</option>
+                                <option value="5">May</option>
+                                <option value="6">Jun</option>
+                                <option value="7">Jul</option>
+                                <option value="8">Aug</option>
+                                <option value="9">Sep</option>
+                                <option value="10">Oct</option>
+                                <option value="11">Nov</option>
+                                <option value="12">Dec</option>
+                            </select>
+                            <span class="error" id="birthDayMonthError"></span>
+                        </div>
+                        <div class="form-group">
+                            <select class="form-control" id="birthDayDay">
+                                <option value="0">Select Day</option>
+                                {% for day in 1..31 %}
+                                    <option value="{{ day }}">{{ day }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="error" id="birthDayDayError"></span>
+                        </div>
+                    {% else %}
+                        <div class="form-group">
+                            <span class="text-success">Date of birthday is present</span>
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary btn-lg">Save</button>
+
+                    <input type="hidden" name="legalEntityToken" id="legalEntityToken" />
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="https://cdn.wepay.com/wepay.min.js"></script>
+    <script type="text/javascript">
+        const wepayAppId = '{{ wepay_app_id }}'
+        const wepayApiVersion = '{{ wepay_version }}'
+        const wepayEnvironment = '{{ wepay_environment }}'
+
+        WePay.configure(wepayEnvironment, wepayAppId, wepayApiVersion)
+
+        function createLegalEntity() {
+            const email = document.getElementById('email').value
+            const firstName = document.getElementById('firstName').value
+            const lastName = document.getElementById('lastName').value
+            const is_beneficial_owner = document.getElementById('isBeneficialOwner').checked
+
+            const requestPayload = {
+                resource: 'legal_entities',
+                legal_entities: {
+                    controller: {
+                        email,
+                        name: {
+                            first: firstName,
+                            last: lastName
+                        },
+                        is_beneficial_owner,
+                        email_is_verified: true
+                    },
+                    terms_of_service: {
+                        acceptance_time: 1551980186, // Send real merchant TOS acceptance time
+                        original_ip: '8.8.8.8'       // Send real merchant original IP
+                    }
+                }
+            }
+
+            if (document.getElementById('socialSecurityNumber')) {
+                const social_security_number = document.getElementById('socialSecurityNumber').value
+
+                requestPayload.legal_entities.controller.personal_country_info = {
+                    US: {
+                        social_security_number
+                    }
+                }
+            }
+
+            if (document.getElementById('birthDayYear')) {
+                const year = +document.getElementById('birthDayYear').value
+                const month = +document.getElementById('birthDayMonth').value
+                const day = +document.getElementById('birthDayDay').value
+
+                requestPayload.legal_entities.controller.date_of_birth = {
+                    year,
+                    month,
+                    day
+                }
+            }
+
+            const result = WePay.tokens.create(requestPayload)
+
+            if (result.error_code) {
+                const getError = (resultDetails, field) => {
+                    const error = resultDetails.filter(el => el.target.includes(field))[0]
+                    return error ? error.message : ''
+                }
+
+                const printError = (HTMLElementId, field) => {
+                    const element = document.getElementById(HTMLElementId)
+                    element.innerHTML = getError(result.details, field)
+                }
+
+                printError('firstNameError', 'first')
+                printError('lastNameError', 'last')
+                printError('emailError', 'email')
+                printError('socialSecurityNumberError', 'social_security_number')
+                printError('birthDayYearError', 'year')
+                printError('birthDayMonthError', 'month')
+                printError('birthDayDayError', 'day')
+                printError('birthDayError', 'date_of_birth')
+
+                return false
+            } else {
+                document.getElementById('legalEntityToken').value = result.id
+
+                return true
+            }
+        }
+    </script>
+{% endblock %}

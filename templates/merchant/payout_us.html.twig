@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="form-login">
+        <h1>Payout</h1>
+
+        <div class="row">
+            <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+                <form onsubmit="return createPayout()" method="POST">
+                    <div class="form-group">
+                        <label for="accountNumber">Account Number *</label>
+                        <input type="text" class="form-control" id="accountNumber" placeholder="Account Number" value="{{ payout.accountNumber }}">
+                        <span class="error" id="accountNumberError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="routingNumber">Routing Number *</label>
+                        <input type="text" class="form-control" id="routingNumber" placeholder="Routing Number" value="{{ payout.routingNumber }}">
+                        <span class="error" id="routingNumberError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountType">Account Type *</label>
+                        <select class="form-control" id="accountType">
+                            <option>Select Account Type</option>
+                            <option value="checking" {% if payout.accountType == 'checking' %}selected{% endif %}>Checking</option>
+                            <option value="savings" {% if payout.accountType == 'savings' %}selected{% endif %}>Savings</option>
+                        </select>
+                        <span class="error" id="accountTypeError"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg">Save</button>
+
+                    <input type="hidden" name="payoutToken" id="payoutToken" />
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="https://cdn.wepay.com/wepay.min.js"></script>
+    <script type="text/javascript">
+        const wepayAppId = '{{ wepay_app_id }}'
+        const wepayApiVersion = '{{ wepay_version }}'
+        const wepayEnvironment = '{{ wepay_environment }}'
+
+        WePay.configure(wepayEnvironment, wepayAppId, wepayApiVersion)
+
+        function createPayout() {
+            const routing_number = document.getElementById('routingNumber').value
+            const account_number = document.getElementById('accountNumber').value
+            const account_type = document.getElementById('accountType').value
+
+            const result = WePay.tokens.create({
+                resource: 'payout_methods',
+                payout_methods: {
+                    type: 'payout_bank_us',
+                    payout_bank_us: {
+                        account_number,
+                        routing_number,
+                        account_type
+                    }
+                }
+            })
+
+            if (result.error_code) {
+                const getError = (resultDetails, field) => {
+                    const error = resultDetails.filter(el => el.target.includes(field))[0]
+                    return error ? error.message : ''
+                }
+
+                const printError = (HTMLElementId, field) => {
+                    const element = document.getElementById(HTMLElementId)
+                    element.innerHTML = getError(result.details, field)
+                }
+
+                printError('accountNumberError', 'account_number')
+                printError('routingNumberError', 'routing_number')
+                printError('accountTypeError', 'account_type')
+
+                return false
+            } else {
+                document.getElementById('payoutToken').value = result.id
+
+                return true
+            }
+        }
+    </script>
+
+
+{% endblock %}

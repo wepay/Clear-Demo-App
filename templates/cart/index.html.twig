@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>SHOPPING CART</h1>
+
+    {% if products|length > 0 %}
+        {% include 'cart/parts/cart_form.html.twig' %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

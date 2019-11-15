@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Products</h1>
+
+    <div class="row">
+        {% for product in products %}
+            <div class="col-12 col-sm-6 col-md-6 col-lg-4 col-xl-3">
+                <div class="card">
+                    <a href="{{ path('product', {'id' : product.id}) }}" class="card__img">
+                        <img src="products/{{ product.image }}" class="card-img-top" alt="">
+                    </a>
+                    <div class="card-body">
+                        <a href="{{ path('product', {'id' : product.id}) }}" class="card-title">{{ product.name }}</a>
+                        <p class="card-text">
+                            {{ product.description|length > 80 ? product.description|slice(0, 80) ~ '...' : product.description }}
+                        </p>
+                        <div class="card-price">${{ product.price|number_format(2) }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

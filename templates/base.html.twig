@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+        <title>{% block title %}Demo Wepay{% endblock %}</title>
+        {% block stylesheets %}
+            {{ encore_entry_link_tags('style') }}
+        {% endblock %}
+    </head>
+    <body class="loaded">
+        <div class="main-wrapper">
+            <main class="content">
+                <div class="container-fluid">
+                    {% block body %}{% endblock %}
+                </div>
+            </main>
+
+            {% include 'parts/header.html.twig' %}
+            {% include 'parts/footer.html.twig' %}
+        </div>
+
+        <div class="icon-load"></div>
+
+        {% block modals %}{% endblock %}
+
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
+    </body>
+</html>

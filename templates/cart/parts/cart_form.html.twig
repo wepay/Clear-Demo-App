@@ -1,0 +1,59 @@
+{% set total = 0 %}
+
+{{ form_start(form) }}
+    <div class="row">
+        <div class="col-12">
+            <div class="list-basket">
+                {% for cartItemForm in form.cartItems %}
+                    {% set product      = products[cartItemForm.productId.vars.value] %}
+                    {% set productTotal = product.price * cartItemForm.vars.value.amount %}
+                    {% set total        = total + productTotal %}
+
+                    <div class="list-basket__item" data-role="cart-item" data-price="{{ product.price }}">
+                        <div class="table">
+                            <div class="tr">
+                                <div class="td col1">
+                                    <img src="/products/{{ product.image }}" alt="">
+                                </div>
+                                <div class="td col-long">
+                                    <div class="table">
+                                        <div class="tr">
+                                            <div class="td info">
+                                                <a href="{{ path('product', {'id': product.id}) }}" class="list-basket__title">{{ product.name }}</a>
+                                            </div>
+                                            <div class="td col-price">
+                                                <span class="info-product__price">${{ product.price }}</span>
+                                            </div>
+                                            <div class="td col-input">
+                                                <div class="input-number">
+                                                    {{ form_widget(cartItemForm.amount) }}
+                                                    <a href="#" data-role="amount-change" class="js-plus plus-btn"><i class="fa fa-plus"></i></a>
+                                                    <a href="#" data-role="amount-change" class="js-minus minus-btn"><i class="fa fa-minus"></i></a>
+                                                </div>
+                                            </div>
+                                            <div class="td col-total-price">
+                                                <span class="info-product__price" data-role="cart-item-total">${{ productTotal }}</span>
+                                            </div>
+                                            <a href="{{ path('cart_remove', {'product_id': product.id}) }}" class="delete"><i class="fa fa-trash"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{ form_widget(cartItemForm.productId) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="line-total text-right">
+        <div class="line-total-inner">
+            <span class="total-text">Total</span>
+            <span id="total" class="total-price">${{ total }}</span>
+        </div>
+        <div class="box-btn">
+            <button type="submit" href="#" class="btn btn-primary big">Proceed to checkout</button>
+        </div>
+    </div>
+    {{ form_rest(form) }}
+{{ form_end(form) }}

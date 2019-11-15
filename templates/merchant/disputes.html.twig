@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Disputes</h1>
+
+    <div class="row">
+        <div class="col-12">
+            {% for message in app.flashes('dispute') %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+            <div class="list-basket list-basket_history list-basket_disputes">
+                {% for dispute in disputes %}
+                    <div class="list-basket__item">
+                        <div class="table">
+                            <div class="tr">
+                                <div class="td col-long">
+                                    <div class="table">
+                                        <div class="tr">
+                                            <div class="td info">
+                                                <span class="list-basket__title">Dispute Item</span>
+                                            </div>
+                                            <div class="td new-col">
+                                                <span class="info-product__date">{{ dispute.createdAt|date('d/m/Y') }}</span>
+                                                <span class="info-product__status pending">{{ dispute.status|replace({'_': ' '})|title }}</span>
+                                            </div>
+                                            <div class="td col-price">
+                                                <span class="info-product__price">${{ dispute.amount }}</span>
+                                            </div>
+                                            <div class="td col-input">
+                                                <div class="input-number">
+                                                    <input disabled type="text" value="1">
+                                                </div>
+                                            </div>
+                                            <div class="td col-total-price">
+                                                <span class="info-product__price">${{ dispute.amount }}</span>
+                                            </div>
+                                            {% if dispute.status == 'awaiting_merchant_response' %}
+                                                <a onclick="return openModal('{{ dispute.id }}')" href="#" data-toggle="modal" data-target="#exampleModalCenter" class="btn-attach attach-files">Attach Files</a>
+                                                <a href="{{ path('merchant_dispute_concede', {'disputeId': dispute.id}) }}" class="btn-attach">Concede</a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modals %}
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form action="{{ path('merchant_dispute_attach') }}" method="POST" onsubmit="return attachFiles()">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="documentType" class="col-form-label">Document Type:</label>
+                            <select class="form-control" id="documentType" required>
+                                <option value="">Select Document Type</option>
+                                <option value="cancelation_request">Cancelation Request</option>
+                                <option value="contract">Contract</option>
+                                <option value="correspondence">Correspondence</option>
+                                <option value="item_description">Item Description</option>
+                                <option value="itemized_receipt">Itemized Receipt</option>
+                                <option value="invoice">Invoice</option>
+                                <option value="ip_logins">Ip Logins</option>
+                                <option value="proof_of_credit">Proof Of Credit</option>
+                                <option value="return_policy">Return Policy</option>
+                                <option value="refund_policy">Refund Policy</option>
+                                <option value="signed_contract">Signed Contract</option>
+                                <option value="tracking">Tracking</option>
+                                <option value="written_rebuttal">Written Rebuttal</option>
+                            </select>
+                            <span class="error" id="documentTypeError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="documentFile" class="col-form-label">File:</label>
+                            <input type="file" class="form-control-file" accept=".jpg,.jpeg,.png,.pdf" id="documentFile">
+                            <span class="error" id="documentFileError"></span>
+                        </div>
+                        <input type="hidden" id="documentId" name="documentId" />
+                        <input type="hidden" id="disputeId" name="disputeId" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="https://cdn.wepay.com/wepay.min.js"></script>
+    <script type="text/javascript">
+        const wepayAppId = '{{ wepay_app_id }}'
+        const wepayApiVersion = '{{ wepay_version }}'
+        const wepayEnvironment = '{{ wepay_environment }}'
+
+        WePay.configure(wepayEnvironment, wepayAppId, wepayApiVersion)
+
+        {# Getting legal entity id using twig #}
+        const legalEntityId = '{{ app.user.merchantInfo.accountId }}'
+
+        function openModal(disputeId)
+        {
+            document.getElementById('disputeId').value = disputeId
+
+            return true
+        }
+
+        function attachFiles()
+        {
+            const documentType = document.getElementById('documentType').value
+            let documentFile = null
+
+            if (document.getElementById('documentFile').files.length) {
+                documentFile = document.getElementById('documentFile').files[0]
+            }
+
+            const result = WePay.documents.create({
+                type: documentType,
+                account_id: legalEntityId,
+                file: documentFile
+            })
+
+            if (result.error_code) {
+                const getError = (resultDetails, field) => {
+                    const error = resultDetails.filter(el => el.target.includes(field))[0]
+                    return error ? error.message : ''
+                }
+
+                const printError = (HTMLElementId, field) => {
+                    const element = document.getElementById(HTMLElementId)
+                    element.innerHTML = getError(result.details, field)
+                }
+
+                printError('documentFileError', 'file')
+                printError('documentTypeError', 'type')
+
+                return false
+            } else {
+                document.getElementById('documentId').value = result.id
+
+                return true
+            }
+        }
+    </script>
+{% endblock %}

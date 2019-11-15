@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6">
+            <div class="img-product">
+                <img src="/products/{{ product.image }}" alt="">
+            </div>
+        </div>
+        <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6">
+            <div class="info-product">
+                <h1 class="info-product__name">{{ product.name }}</h1>
+                <span class="info-product__price">${{ product.price|number_format(2) }}</span>
+                <div class="info-product__description">
+                    <p>{{ product.description }}</p>
+                </div>
+
+                {% for message in app.flashes('add_to_cart') %}
+                    <div class="alert alert-success" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+
+                <form method="GET" action="{{ path('cart_add') }}">
+                    <div class="input-number input-number_card">
+                        <input readonly type="text" name="amount" value="1">
+                        <a href="#" class="js-plus plus-btn"><i class="fa fa-plus"></i></a>
+                        <a href="#" class="js-minus minus-btn"><i class="fa fa-minus"></i></a>
+                    </div>
+                    <a href="#" class="js-submit btn btn-primary btn-lg">Add to card</a>
+                    <input type="hidden" name="product_id" value="{{ product.id }}" />
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

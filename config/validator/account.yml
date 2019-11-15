@@ -1,0 +1,25 @@
+App\Objects\Account:
+    properties:
+        name:
+            - NotBlank: ~
+            - Length:
+                min: 2
+                max: 255
+            - Regex:
+                pattern: '/wepay/'
+                match:   false
+                message: Your name cannot contain a "wepay" word
+        description:
+            - NotBlank: ~
+            - Length:
+                min: 2
+                max: 255
+        statementDescription:
+            - NotBlank: ~
+            - Length:
+                min: 2
+                max: 255
+            - Regex:
+                pattern: '/wepay/'
+                match:   false
+                message: Your name cannot contain a "wepay" word

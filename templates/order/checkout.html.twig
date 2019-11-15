@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+            <h1>Checkout</h1>
+
+            <div class="row">
+                <div class="col-12 col-sm-12 col-md-6 col-lg-5 col-xl-5">
+                    <h3>Order</h3>
+                    <ul class="list-order">
+                        {% for orderItem in orderItems %}
+                            {% set product = orderItem.product %}
+
+                            <li class="list-order__item">
+                                <div class="list-order__img">
+                                    <img src="/products/{{ product.image }}" alt="">
+                                </div>
+                                <div class="list-order__info">
+                                    <a href="#" class="list-basket__title">{{ product.name }}</a>
+                                    <span class="info-product__price">${{ product.price }} x {{ orderItem.amount }}</span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="line-total-inner">
+                        <span class="total-text">Total</span>
+                        <span class="total-price">${{ total }}</span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-12 col-md-6 col-lg-7 col-xl-7">
+                    <h3>Form order</h3>
+                    <form onsubmit="return checkout()" method="POST" class="form-order">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" placeholder="Email">
+                            <span class="error" id="emailError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <select class="form-control" id="country">
+                                <option>Select Country</option>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                            </select>
+                            <span class="error" id="countryError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="postalCode">Postal Code</label>
+                            <input type="text" id="postalCode" class="form-control" placeholder="Postal Code">
+                            <span class="error" id="postalCodeError"></span>
+                        </div>
+                        <div class="card-form">
+                            <h3>Card</h3>
+                            <div class="form-group">
+                                <label for="cardHolder">Card Holder</label>
+                                <input type="text" id="cardHolder" class="form-control" placeholder="Card holder">
+                                <span class="error" id="cardHolderError"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardNumber">Card number</label>
+                                <input type="text" id="cardNumber" class="form-control" placeholder="Card number">
+                                <span class="error" id="cardNumberError"></span>
+                            </div>
+                            <div class="row">
+                                <div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4">
+                                    <div class="form-group">
+                                        <label for="expirationYear">Expiration year</label>
+                                        <select class="form-control" id="expirationYear">
+                                            <option>Select Year</option>
+                                            <option value="2019">2019</option>
+                                            <option value="2020">2020</option>
+                                            <option value="2021">2021</option>
+                                            <option value="2022">2022</option>
+                                            <option value="2023">2023</option>
+                                            <option value="2024">2024</option>
+                                        </select>
+                                        <span class="error" id="expirationYearError"></span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4">
+                                    <div class="form-group">
+                                        <label for="expirationMonth">Expiration month</label>
+                                        <select class="form-control" id="expirationMonth">
+                                            <option>Select Month</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                            <option value="11">11</option>
+                                            <option value="12">12</option>
+                                        </select>
+                                        <span class="error" id="expirationMonthError"></span>
+                                    </div>
+                                </div>
+                                <div class="col-4 col-sm-4 col-md-4 col-lg-4 col-xl-4">
+                                    <div class="form-group">
+                                        <label for="cvv">CVV</label>
+                                        <input type="text" id="cvv" class="form-control" placeholder="CCV">
+                                        <span class="error" id="cvvError"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="submit" class="btn btn-primary big" value="To order">
+                        <input type="hidden" name="paymentToken" id="paymentToken" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="https://cdn.wepay.com/wepay.min.js"></script>
+    <script type="text/javascript">
+        const wepayAppId = '{{ wepay_app_id }}'
+        const wepayApiVersion = '{{ wepay_version }}'
+        const wepayEnvironment = '{{ wepay_environment }}'
+
+        WePay.configure(wepayEnvironment, wepayAppId, wepayApiVersion)
+
+        function checkout() {
+            const expiration_year = parseInt(document.getElementById('expirationYear').value)
+            const expiration_month = parseInt(document.getElementById('expirationMonth').value)
+            const card_number = document.getElementById('cardNumber').value
+            const postal_code = document.getElementById('postalCode').value
+            const cvv = document.getElementById('cvv').value
+            const email = document.getElementById('email').value
+            const holder_name = document.getElementById('cardHolder').value
+
+            const country = document.getElementById('country').value
+
+            const result = WePay.tokens.create({
+                resource: 'payment_methods',
+                payment_methods: {
+                    type: 'credit_card',
+                    credit_card: {
+                        card_holder: {
+                            holder_name,
+                            email,
+                            address: {
+                                country,
+                                postal_code
+                            }
+                        },
+                        card_number,
+                        expiration_year,
+                        expiration_month,
+                        cvv,
+                        virtual_terminal_mode: 'web',
+                        auto_update: false
+                    }
+                }
+            })
+
+            if (result.error_code) {
+                const getError = (resultDetails, field) => {
+                    const error = resultDetails.filter(el => el.target.includes(field))[0]
+                    return error ? error.message : ''
+                }
+
+                const printError = (HTMLElementId, field) => {
+                    const element = document.getElementById(HTMLElementId)
+                    element.innerHTML = getError(result.details, field)
+                }
+
+                printError('cardHolderError', 'holder_name')
+                printError('cardNumberError', 'card_number')
+                printError('expirationMonthError', 'expiration_month')
+                printError('expirationYearError', 'expiration_year')
+                printError('cvvError', 'cvv')
+                printError('emailError', 'email')
+                printError('countryError', 'country')
+                printError('postalCodeError', 'postal_code')
+
+                return false
+            } else {
+                document.getElementById('paymentToken').value = result.id
+
+                return true
+            }
+        }
+    </script>
+{% endblock %}

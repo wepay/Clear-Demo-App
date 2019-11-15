@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Orders history</h1>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="list-basket list-basket_history">
+                {% for order in orders %}
+                    {% for orderItem in order.orderItems %}
+                        <div class="list-basket__item">
+                            <div class="table">
+                                <div class="tr">
+                                    <div class="td col1">
+                                        <img src="/products/{{ orderItem.product.image }}" alt="">
+                                    </div>
+                                    <div class="td col-long">
+                                        <div class="table">
+                                            <div class="tr">
+                                                <div class="td info">
+                                                    <a href="{{ path('product', {'id': orderItem.product.id}) }}" class="list-basket__title">{{ orderItem.product.name }}</a>
+                                                </div>
+                                                <div class="td new-col">
+                                                    <span class="info-product__date">{{ order.createdAt|date('d/m/Y') }}</span>
+                                                </div>
+                                                <div class="td col-price">
+                                                    <span class="info-product__price">${{ orderItem.product.price }}</span>
+                                                </div>
+                                                <div class="td col-input">
+                                                    <div class="input-number">
+                                                        <input readonly type="text" value="{{ orderItem.amount }}">
+                                                    </div>
+                                                </div>
+                                                <div class="td col-total-price">
+                                                    <span class="info-product__price">${{ orderItem.totalPrice }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

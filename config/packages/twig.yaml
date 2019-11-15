@@ -1,0 +1,10 @@
+twig:
+    default_path: '%kernel.project_dir%/templates'
+    debug: '%kernel.debug%'
+    strict_variables: '%kernel.debug%'
+    globals:
+        wepay_app_id: '%env(WEPAY_APP_ID)%'
+        wepay_version: '%env(WEPAY_API_VERSION)%'
+        wepay_environment: '%env(WEPAY_ENVIRONMENT)%'
+    form_themes: ['bootstrap_4_layout.html.twig']
+

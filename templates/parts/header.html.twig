@@ -1,0 +1,67 @@
+<header>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ path('shop') }}">
+                <img src="/img/logo.png" alt="">
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    {% if (not app.user) %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('register') }}">Registration</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('login') }}">Login</a>
+                        </li>
+                    {% else %}
+                        {% if is_granted('ROLE_CUSTOMER') %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Customer Interface
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ path('customer_orders') }}">orders history</a>
+                                    <a class="dropdown-item" href="#">Disputes list</a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('cart') }}">Cart</a>
+                            </li>
+                        {% endif %}
+                        {% if is_granted('ROLE_MERCHANT') %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Merchant Interface
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    {% if app.user.merchantInfo.country == 'US' %}
+                                        <a class="dropdown-item" href="{{ path('merchant_info_us') }}">Merchant Info</a>
+                                        <a class="dropdown-item" href="{{ path('merchant_payout_us') }}">Payout</a>
+                                    {% else %}
+                                        <a class="dropdown-item" href="{{ path('merchant_info_ca') }}">Merchant Info</a>
+                                    {% endif %}
+                                    <a class="dropdown-item" href="{{ path('merchant_account') }}">Account Info</a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('merchant_orders') }}">Orders</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('merchant_disputes') }}">Disputes</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('logout') }}">Logout</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+</header>
